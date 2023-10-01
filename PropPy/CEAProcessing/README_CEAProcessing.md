@@ -13,7 +13,7 @@ AutoCEA_Output.xlsx
 AutoCEA.py
     - This is the main script that will take your input file, run it through CEA, do some cleaning, and spit it all out on AutoCEA_Output.xlsx.
     - All you should have to do is run the script. The only thing I could see you maybe needing to change is file paths.
-Watch this video to view the functionality of this script - https://youtu.be/RKBDQbuojgI
+    Watch this video to view the functionality of this script - https://youtu.be/RKBDQbuojgI
 
 CEATabulationCleaner.py
     - A function that will take the horrid CEA Tabulation output and make it a useable CSV. In retrospect, I probably should have made the Chamber, Throat, and Exit data all seperate columns. 
