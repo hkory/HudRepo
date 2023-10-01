@@ -2,8 +2,6 @@ Hello
 
 This README will cover items in the CEAProcessing Folder
 
-*Link to a video covering AutoCEA.py Usage*
-
 AutoCEA_Input.xlsx
     - This excel sheet is where you will enter all information required to get something useful out of NASA CEA.
     - Further notes on this sheet's use are included within.
