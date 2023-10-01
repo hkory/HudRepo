@@ -1,6 +1,6 @@
 Hello
 
-This README will cover items in the RocketPy Folder
+This README will cover items in the PropPy Folder
 
 CalderaEngineInfo.txt
     - Contains link to Excel Sheet where Caldera Engine Information lives
