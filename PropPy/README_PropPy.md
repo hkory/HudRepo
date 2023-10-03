@@ -3,7 +3,7 @@ Hello
 This README will cover items in the PropPy Folder
 
 CalderaEngineInfo.txt
-    - Contains link to Excel Sheet where Caldera Engine Information lives
+    - Contains link to Excel Sheet where Caldera Engine (personal design) Information lives
 
 geckodriver.log
     - Log for gecko driver (thing that makes selenium work in Firefox)
