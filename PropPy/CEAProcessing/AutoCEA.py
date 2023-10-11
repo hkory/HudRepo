@@ -1,65 +1,58 @@
 # AutoCEA
 # By Hud & GPT
+# Requires Firefox and GeckoDriver!!! https://github.com/mozilla/geckodriver/releases
 
 import pandas as pd
 import numpy as np
 import sys
-import math
 from CEATabulationCleaner import CEATabCleaner
 import openpyxl
 import matplotlib.pyplot as plt
 from openpyxl.chart import ScatterChart, Reference, Series
 from openpyxl.chart.trendline import Trendline
-from openpyxl import Workbook
 from openpyxl.styles import Font, Border, Side, PatternFill, Alignment
-from openpyxl.drawing.image import Image
 from openpyxl.utils import get_column_letter
 import os
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.options import Options
 
 print("\n\nStarting 'AutoCEA.py'.\n")
 print("Reading CEA inputs from AutoCEA_Input.xlsx.\n")
 
 ######################### INPUTS ########################
 
+#Edit these as needed
+InputExcelPath = 'CEAProcessing\AutoCEA_Input.xlsx'
+OutputExcelPath = 'CEAProcessing\AutoCEA_Output.xlsx'
+
 # Read the Excel file / Handle Errors
 try:
-    pd.read_excel('CEAProcessing\AutoCEA_Input.xlsx')
+    pd.read_excel(InputExcelPath)
 except (PermissionError):
     print("Error: Close Input file and run again.\n")
     print("END\n\n")
     sys.exit()
-ReadExcel = pd.ExcelFile('CEAProcessing\AutoCEA_Input.xlsx')
-
-# Get the list of sheet names
-the_sheet_names = ReadExcel.sheet_names
+ReadExcel = pd.ExcelFile(InputExcelPath)
 
 # Determine which sheet to pull parameters from
-SheetBox = False
+SheetBox = False # The selection box at the top of the sheet
 SheetCounter = 0 # variable to switch thru sheets
 
 while SheetBox == False:
-
-    sheet_name = SheetCounter # start at first sheet
-
-    # Read the Excel file
-    ReadExcel = pd.read_excel('CEAProcessing\AutoCEA_Input.xlsx', sheet_name)
-
+    # Read the specified sheet in Excel file
+    ReadExcel = pd.read_excel(InputExcelPath, SheetCounter)
     # Read check box value
     SheetBox = ReadExcel.iloc[1, 6] 
 
     if SheetBox == True:
-        RunSheet = SheetCounter
+        RunSheet = SheetCounter #Variable to store the sheet that will be used
         SheetDesc = ReadExcel.iloc[0, 3]
     else:
         SheetCounter += 1
 print(f'Sheet to use: {RunSheet}, Sheet {SheetDesc}' )
 
 # store CEA Data Identification Key
-ReadExcel = pd.read_excel('CEAProcessing\AutoCEA_Input.xlsx', RunSheet)
+ReadExcel = pd.read_excel(InputExcelPath, RunSheet)
 CEA_Key = ReadExcel.iloc[2, 3] 
 print(f'Data Identification Key: {CEA_Key}')
 
@@ -69,10 +62,9 @@ print(f'Chamber Pressure: {Pc}')
 
 # store Fuel
 FuelBox = False
-FuelCounter = 10
+FuelCounter = 10 #starting row for loop
 
-while FuelBox == False:
-
+while FuelBox == False: #while the check box is false, increase row until check box is true
     # Read check box value
     FuelBox = ReadExcel.iloc[FuelCounter, 4] 
 
@@ -85,10 +77,9 @@ print(f'Fuel to use: {RunFuel} at {FuelTemp} K')
 
 # store Oxidizer
 OxBox = False
-OxCounter = 21
+OxCounter = 21 #starting row for loop
 
 while OxBox == False:
-
     # Read check box value
     OxBox = ReadExcel.iloc[OxCounter, 4] 
 
@@ -100,13 +91,13 @@ while OxBox == False:
 print(f'Oxidizer to use: {RunOx} at {OxTemp} K')
 
 # store MR
-MRCounter = 6
+MRCounter = 6 #start column
 MRArray = [None]*30
 
 # Read check box value
 MRBox = ReadExcel.iloc[31, 3] 
 
-if MRBox == True:
+if MRBox == True: #switch MR method based on selection box
     while MRCounter < 36:
         MRArray[MRCounter-6] = float(ReadExcel.iloc[34, MRCounter]) 
         if np.isnan(MRArray[MRCounter-6]):
@@ -211,7 +202,7 @@ OxSubmit1.click()
 
 #MRs
 MRBoxCounter = 0
-if MRBox == True:
+if MRBox == True: #same logic as before for switching between MR method
     while MRBoxCounter < len(MRArray):
         MRPathName = "OFP" + str(MRBoxCounter+1)
         MRIndivField = driver.find_element(By.NAME, f'{MRPathName}')
@@ -235,10 +226,11 @@ ExCoSubmit = driver.find_element(By.NAME, ".submit")
 ExCoSubmit.click()
 
 #Final
-IonsRadio = driver.find_element(By.NAME, "ions")
+IonsRadio = driver.find_element(By.NAME, "ions") #turn on ionized species
 if not(IonsRadio.is_selected()):
     IonsRadio.click()
-TabulateRadio = driver.find_element(By.XPATH, "/html/body/form/fieldset[5]/table/tbody/tr[1]/td[2]/input")
+#Turn on tabulation mode
+TabulateRadio = driver.find_element(By.XPATH, "/html/body/form/fieldset[5]/table/tbody/tr[1]/td[2]/input") 
 TabulateRadio.click()
 
 FinalSubmit = driver.find_element(By.NAME, ".submit")
@@ -246,21 +238,21 @@ FinalSubmit.click()
 
 #Spreadsheet Export Setup
 PropsField1 = driver.find_element(By.NAME, "plt1")
-PropsField1.send_keys("rho")
+PropsField1.send_keys("rho") #density
 PropsField2 = driver.find_element(By.NAME, "plt2")
-PropsField2.send_keys("gam")
+PropsField2.send_keys("gam") #Specific Heat Ratio
 PropsField3 = driver.find_element(By.NAME, "plt3")
-PropsField3.send_keys("m")
+PropsField3.send_keys("m") #Molar mass of combustion products (I think)
 PropsField4 = driver.find_element(By.NAME, "plt4")
-PropsField4.send_keys("p")
+PropsField4.send_keys("p") #presha
 PropsField5 = driver.find_element(By.NAME, "plt5")
-PropsField5.send_keys("t")
+PropsField5.send_keys("t") #temp
 PropsField6 = driver.find_element(By.NAME, "plt6")
-PropsField6.send_keys("isp")
+PropsField6.send_keys("isp") #isp. This is only an ideal estimate. Still useful for determining MR, but I wouldnt use this in other calcs
 PropsField7 = driver.find_element(By.NAME, "plt7")
-PropsField7.send_keys("mach")
+PropsField7.send_keys("mach") #Mach#
 PropsField8 = driver.find_element(By.NAME, "plt8")
-PropsField8.send_keys("son")
+PropsField8.send_keys("son") #sonic velocity (speed of sound)
 PropsSubmit = driver.find_element(By.NAME, ".submit")
 PropsSubmit.click()
 
@@ -291,19 +283,21 @@ with open(RawCEA_Tab_File, 'w', encoding='utf-8') as file:
     file.write(CopyTabText)
 
 #CEA OutPut Excel
-try: #handle open error
-    openpyxl.load_workbook('CEAProcessing\AutoCEA_Output.xlsx')
+try: #handle file still open error
+    openpyxl.load_workbook(OutputExcelPath)
 except (PermissionError):
     print("\nError: Close Output file and run again.\n")
     print("END\n\n")
     sys.exit()
 
-OutputExcelFile = openpyxl.load_workbook('CEAProcessing\AutoCEA_Output.xlsx')
+OutputExcelFile = openpyxl.load_workbook(OutputExcelPath)
+
+#Create new sheet within output file
 ExistingSheetNames = OutputExcelFile.sheetnames
 NewSheetNameAttempt = CEA_Key
 SheetNameCounter = 1
 
-while NewSheetNameAttempt in ExistingSheetNames:
+while NewSheetNameAttempt in ExistingSheetNames: #dont make a new sheet with the same name as an old one
     NewSheetNameAttempt = CEA_Key
     NewSheetNameAttempt = NewSheetNameAttempt + f"({SheetNameCounter})"
     SheetNameCounter += 1
@@ -330,7 +324,7 @@ blue_fill = PatternFill(start_color="DDE1EC", end_color="DDE1EC", fill_type="sol
 NewSheetEdit['B2'].fill = blue_fill
 NewSheetEdit.sheet_view.zoomScale = 85
 
-# Make Tabulation Excel ready
+# Make Tabulation Excel ready using CEATabulationCleaner.py
 CEATabCleaner("CEAProcessing\RawCEA_Tabulation.txt","CEAProcessing\CleanCEA_Tabulation.txt")
 print("Cleaned Tabulation saved to 'CleanCEA_Tabulation.txt'.\n")
 
@@ -343,15 +337,15 @@ for index, line in enumerate(text_lines, start=4):
     NewSheetEdit.cell(row=index, column=2, value=line)
 
 # Read CSV data
-CleanCEA_Tab_File = "CEAProcessing\CleanCEA_Tabulation.txt"
-df2 = pd.read_csv(CleanCEA_Tab_File, header=None)
+CleanCEA_Tab_Path = "CEAProcessing\CleanCEA_Tabulation.txt"
+CleanCEA_Tab_File = pd.read_csv(CleanCEA_Tab_Path, header=None)
 
 # Choose the cell where you want to paste the data
 Tab_start_row = 3  # Row where you want to start pasting data
 Tab_start_column = 13  # Column where you want to start pasting data
 
-# Write the DataFrame values to the selected cells
-for r_idx, row in enumerate(df2.iterrows(), start=Tab_start_row):
+# Write the csv values to the selected cells
+for r_idx, row in enumerate(CleanCEA_Tab_File.iterrows(), start=Tab_start_row):
     for c_idx, value in enumerate(row[1], start=Tab_start_column):
         cell = NewSheetEdit.cell(row=r_idx, column=c_idx)
         cell.value = value
@@ -374,7 +368,7 @@ start_column = "L"
 end_column = "S"
 
 # Define the start and end rows
-with open(CleanCEA_Tab_File, 'r') as file:
+with open(CleanCEA_Tab_Path, 'r') as file:
     line_count = sum(1 for line in file)
 start_row = 2  # Change to the desired start row
 end_row = line_count + 1   # Change to the desired end row
@@ -479,7 +473,7 @@ NewSheetEdit['K2'].alignment = Alignment(horizontal='center', vertical='center')
 NewSheetEdit['L2'] = "MR"
 NewSheetEdit.column_dimensions["L"].width = 6
 
-# Specify the column you want to left-align (e.g., column 'A')
+# Specify the column you want to left-align
 column_letter = 'L'
 
 # Get the maximum row number in the column
@@ -515,7 +509,6 @@ if MRBox == True:
         for i in range(1, 3):
             cell_below = NewSheetEdit.cell(row=start_row + i, column=start_column)
             cell_below.value = value
-        
         start_row += 3  # Move to the next group of cells
 
 else:
@@ -546,7 +539,7 @@ else:
 
 # Isp over MR Graph
 
-MR_x_data = values_list
+MR_x_data = values_list #variable reassign for better readability
 
 # Handles ISP at exit
 IspRowCount = 5
@@ -561,6 +554,7 @@ while IspCellValue != None:
         Isp_y_data.append(IspCellValue/gravity) 
 
 # Create the scatterplot using matplotlib
+"""
 plt.scatter(MR_x_data, Isp_y_data, label='Isp over MR1')
 plt.xlabel('Mixture Ratio')
 plt.ylabel('Isp')
@@ -574,15 +568,15 @@ plt.legend()
 # plt.ylim(0, 20)
 
 # Save the scatterplot to a file (e.g., 'scatterplot.png')
-#plt.savefig('CEAProcessing/scatterplot.png')
+plt.savefig('CEAProcessing/scatterplot.png')
 
 # Display the scatterplot
 #plt.show()
+"""
 
 # data
-
-x_data = MR_x_data
-y_data = Isp_y_data
+x_data = MR_x_data #this is dumb, just leave it
+y_data = Isp_y_data #this is dumb, just leave it
 
 # Write data to worksheet
 for i, (x, y) in enumerate(zip(x_data, y_data), start=2):
@@ -602,7 +596,7 @@ y_values = Reference(NewSheetEdit, min_col=23, min_row=2, max_row=len(y_data) + 
 series = Series(y_values, x_values)
 series.graphicalProperties.line.noFill=True
 series.marker.symbol = "circle"
-series.trendline = Trendline(dispEq=True, trendlineType = 'poly', order = 5)
+series.trendline = Trendline(dispEq=True, trendlineType = 'poly', order = 5) #TRENDLINE (This shit was hard to find)
 
 # Add the series to the chart
 chart.series.append(series)
@@ -713,6 +707,7 @@ NewSheetEdit.add_chart(chart, "V21")
 columns_to_change = ["V", "W"]
 
 # NO MO CHART TIME
+# Final sheet edit rn
 
 # Set the font color to white for the specified columns
 font = Font(color="FFFFFF")  # White color
@@ -748,6 +743,19 @@ for cell in NewSheetEdit['X40:AE40'][0]:
 for cell in NewSheetEdit['X43:AE43'][0]:
     cell.border = top_border
 
+# Apply the white fill and font color to cell A1
+cell_a1 = NewSheetEdit['C2']
+cell_a1.value = "By Hud"
+white_font = Font(color="FFFFFF")
+cell_a1.font = white_font
+
+# Date highlighter
+date_fill = PatternFill(start_color="E3F4F8", end_color="E3F4F8", fill_type="solid")
+# Apply the fill to the range of cells (D11 to F11)
+for row in NewSheetEdit.iter_rows(min_row=11, max_row=11, min_col=4, max_col=6):
+    for cell in row:
+        cell.fill = date_fill
+
 # End Sheet Edit
 
 # Kill Selenium
@@ -755,6 +763,6 @@ driver.close()
 
 print("'AutoCEA.py' complete, closing browser and opening 'AutoCEA_Output.xlsx'. \U0001F680\n\n")
 
-OutputExcelFile.save('CEAProcessing\AutoCEA_Output.xlsx')
+OutputExcelFile.save(OutputExcelPath)
 OutputExcelFile.close()
-os.system('CEAProcessing\AutoCEA_Output.xlsx')
+os.system(OutputExcelPath)
